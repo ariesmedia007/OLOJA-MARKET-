@@ -141,6 +141,21 @@ async function loadMyListings() {
   }
 
   console.log('My OLOJA listings:', data);
+  const grid = document.querySelector('#myListingsGrid');
+const emptyMessage = document.querySelector('#noMyListings');
+
+if (data && data.length > 0) {
+  emptyMessage.classList.add('hidden');
+
+  grid.innerHTML = data.map(item => `
+    <article class="card">
+      <h3>${item.title || 'Untitled listing'}</h3>
+      <p>${item.description || ''}</p>
+    </article>
+  `).join('');
+} else {
+  emptyMessage.classList.remove('hidden');
+}
 }
 
 loadMyListings();
