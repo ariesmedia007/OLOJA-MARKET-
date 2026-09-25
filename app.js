@@ -41,6 +41,23 @@ testSupabaseConnection();
 
 
 document.querySelector('#signupBtn').onclick = async function () {
+  const { data: { session } } = await window.olojaSupabase.auth.getSession();
+
+  // If already logged in, log the user out
+  if (session && session.user) {
+    const { error } = await window.olojaSupabase.auth.signOut();
+
+    if (error) {
+      alert('Log out failed: ' + error.message);
+    } else {
+      alert('You have been logged out of OLOJA.');
+      document.querySelector('#loginBtn').textContent = 'Log In';
+      document.querySelector('#signupBtn').textContent = 'Sign Up';
+    }
+    return;
+  }
+
+  // If not logged in, create a new account
   const email = prompt('Enter your email address:');
   if (!email) return;
 
@@ -60,6 +77,15 @@ document.querySelector('#signupBtn').onclick = async function () {
   }
 };
 document.querySelector('#loginBtn').onclick = async function () {
+  const { data: { session } } = await window.olojaSupabase.auth.getSession();
+
+  // If already logged in, show account information
+  if (session && session.user) {
+    alert('My OLOJA Account\n\nEmail: ' + session.user.email);
+    return;
+  }
+
+  // If not logged in, ask for login details
   const email = prompt('Enter your email address:');
   if (!email) return;
 
@@ -75,6 +101,8 @@ document.querySelector('#loginBtn').onclick = async function () {
     alert('Log in failed: ' + error.message);
   } else {
     alert('Welcome to OLOJA! You are now logged in.');
+    document.querySelector('#loginBtn').textContent = 'My Account';
+    document.querySelector('#signupBtn').textContent = 'Log Out';
     console.log('OLOJA login:', data);
   }
 };
