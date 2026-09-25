@@ -25,5 +25,15 @@
 </main>
 <footer>© 2026 OLOJA · Built by Aries · <a href="mailto:ariesmedia007@gmail.com">ariesmedia007@gmail.com</a></footer>
 <div id="modal" class="modal hidden" role="dialog" aria-modal="true"><div class="panel"><button class="close" id="close">×</button><div id="modalContent"></div></div></div>
-<script src="app.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = 'https://qnzkkohooopunjezfate.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_vpS8HTV4Gluvu9yhk-sthw_kD2jmywJ';
+
+  window.olojaSupabase = supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+</script>  
+  <script src="app.js"></script>
 </body></html>
