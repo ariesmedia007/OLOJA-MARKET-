@@ -38,3 +38,24 @@ async function testSupabaseConnection() {
 }
 
 testSupabaseConnection();
+
+
+document.querySelector('#signupBtn').onclick = async function () {
+  const email = prompt('Enter your email address:');
+  if (!email) return;
+
+  const password = prompt('Create a password (minimum 6 characters):');
+  if (!password) return;
+
+  const { data, error } = await window.olojaSupabase.auth.signUp({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert('Sign up failed: ' + error.message);
+  } else {
+    alert('Account created! Please check your email to confirm your account.');
+    console.log('OLOJA signup:', data);
+  }
+};
