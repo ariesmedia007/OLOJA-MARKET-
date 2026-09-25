@@ -78,3 +78,16 @@ document.querySelector('#loginBtn').onclick = async function () {
     console.log('OLOJA login:', data);
   }
 };
+// Keep track of the currently logged-in OLOJA user
+async function checkLoggedInUser() {
+  const { data: { session } } = await window.olojaSupabase.auth.getSession();
+
+  if (session && session.user) {
+    console.log('OLOJA logged-in user:', session.user.email);
+
+    document.querySelector('#loginBtn').textContent = 'My Account';
+    document.querySelector('#signupBtn').textContent = 'Log Out';
+  }
+}
+
+checkLoggedInUser();
