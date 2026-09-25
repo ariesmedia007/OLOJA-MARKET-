@@ -81,9 +81,14 @@ document.querySelector('#loginBtn').onclick = async function () {
 
   // If already logged in, show account information
   if (session && session.user) {
-    alert('My OLOJA Account\n\nEmail: ' + session.user.email);
-    return;
-  }
+  document.querySelectorAll('.page').forEach(page => {
+    page.classList.add('hidden');
+  });
+
+  document.querySelector('#accountPage').classList.remove('hidden');
+  document.querySelector('#accountEmail').textContent = session.user.email;
+  return;
+}
 
   // If not logged in, ask for login details
   const email = prompt('Enter your email address:');
