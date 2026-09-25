@@ -6,7 +6,7 @@ const seed=[
 {id:4,title:'Toyota Camry 2012',price:7800000,cat:'Vehicles',loc:'Lagos',icon:'🚗',desc:'Well maintained Camry. Inspection welcome.',seller:'OLOJA Demo Seller'},
 {id:5,title:'2-Bedroom Apartment',price:2500000,cat:'Real Estate',loc:'Akute',icon:'🏠',desc:'Property listing. Contact seller for inspection details.',seller:'OLOJA Demo Seller'},
 {id:6,title:'Graphic Design Service',price:15000,cat:'Jobs & Services',loc:'Lagos',icon:'🎨',desc:'Flyers, social media designs and branding.',seller:'Aries'}];
-let listings=JSON.parse(localStorage.getItem('olojaListings')||'null')||seed;let saved=new Set(JSON.parse(localStorage.getItem('olojaSaved')||'[]'));
+let listings=[];
 const $=s=>document.querySelector(s),money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
 const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
@@ -229,4 +229,43 @@ async function uploadListingPhoto(file, listingId) {
   console.log('OLOJA listing photo uploaded!');
   return urlData.publicUrl;
 }
+// Load real OLOJA marketplace listings from Supabase
+async function loadMarketplaceFromSupabase() {
+  const { data, error } = await window.olojaSupabase
+    .from('listings')
+    .select(`
+      *,
+      listing_photos (
+        photo_url,
+        sort_order
+      )
+    `)
+    .order('created_at', { ascending: false });
 
+  if (error) {
+    console.error('Could not load OLOJA marketplace:', error);
+    return;
+  }
+
+  listings = (data || []).map(item => ({
+    id: item.id,
+    title: item.title,
+    price: item.price,
+    cat: item.listing_type || 'Product',
+    loc: item.location || '',
+    desc: item.description || '',
+    photoUrl:
+      item.listing_photos &&
+      item.listing_photos.length > 0
+        ? item.listing_photos.sort(
+            (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+          )[0].photo_url
+        : null,
+    seller: 'Seller',
+    owner: false
+  }));
+
+  render();
+}
+
+loadMarketplaceFromSupabase();
