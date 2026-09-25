@@ -7,6 +7,7 @@ const seed=[
 {id:5,title:'2-Bedroom Apartment',price:2500000,cat:'Real Estate',loc:'Akute',icon:'🏠',desc:'Property listing. Contact seller for inspection details.',seller:'OLOJA Demo Seller'},
 {id:6,title:'Graphic Design Service',price:15000,cat:'Jobs & Services',loc:'Lagos',icon:'🎨',desc:'Flyers, social media designs and branding.',seller:'Aries'}];
 let listings=seed.slice();
+let saved=new Set();
 const $=s=>document.querySelector(s),money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
 const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
