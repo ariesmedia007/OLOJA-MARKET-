@@ -22,3 +22,19 @@ function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post
 function closeModal(){$('#modal').classList.add('hidden')};function showPage(name){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(`#${name}Page`).classList.remove('hidden');if(name==='home')render();if(name==='favorites')render();if(name==='dashboard')renderDash()};
 function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 $('#sellTop').onclick=openSell;$('#sellBottom').onclick=openSell;$('#heroSell').onclick=openSell;$('#dashSell').onclick=openSell;$('#close').onclick=closeModal;modal.onclick=e=>{if(e.target===modal)closeModal()};$('#search').oninput=render;$('#category').onchange=render;$('#location').onchange=render;$('#clearSearch').onclick=()=>{$('#search').value='';$('#category').value='';$('#location').value='';render()};document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));render();
+
+// OLOJA Supabase connection test
+async function testSupabaseConnection() {
+  const { data, error } = await window.olojaSupabase
+    .from('categories')
+    .select('*')
+    .limit(1);
+
+  if (error) {
+    console.error('OLOJA Supabase connection error:', error);
+  } else {
+    console.log('OLOJA connected to Supabase successfully!', data);
+  }
+}
+
+testSupabaseConnection();
