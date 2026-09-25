@@ -59,3 +59,22 @@ document.querySelector('#signupBtn').onclick = async function () {
     console.log('OLOJA signup:', data);
   }
 };
+document.querySelector('#loginBtn').onclick = async function () {
+  const email = prompt('Enter your email address:');
+  if (!email) return;
+
+  const password = prompt('Enter your password:');
+  if (!password) return;
+
+  const { data, error } = await window.olojaSupabase.auth.signInWithPassword({
+    email: email,
+    password: password
+  });
+
+  if (error) {
+    alert('Log in failed: ' + error.message);
+  } else {
+    alert('Welcome to OLOJA! You are now logged in.');
+    console.log('OLOJA login:', data);
+  }
+};
