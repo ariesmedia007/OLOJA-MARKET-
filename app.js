@@ -18,7 +18,7 @@ window.toggleSave=toggleSave;
 window.view=id=>{let x=listings.find(a=>a.id===id);modal.classList.remove('hidden');content.innerHTML=`<div class="detail"><div class="detailPic">${x.icon||'🛍️'}</div><div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller(${x.id})">Contact seller</button><button class="ghost" onclick="toggleSave(${x.id});closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
 window.contactSeller=id=>{let x=listings.find(a=>a.id===id);location.href=`mailto:ariesmedia007@gmail.com?subject=${encodeURIComponent('OLOJA enquiry: '+x.title)}&body=${encodeURIComponent('Hello, I am interested in your OLOJA listing: '+x.title+' ('+money(x.price)+').')}`};
 window.deleteListing=id=>{if(confirm('Delete this listing?')){listings=listings.filter(x=>x.id!==id);saved.delete(id);persist();render()}};
-function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><input name="loc" placeholder="Location e.g. Akute" required><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><button class="primary">Publish listing</button></form>`;$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};if(!(await saveListingToSupabase(item)))return;listings.unshift(item);persist();closeModal();showPage('dashboard');render()}}
+function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><input name="loc" placeholder="Location e.g. Akute" required><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><input type="file" name="photo" accept="image/*" required><button class="primary">Publish Listing</button></form>`;$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photo=f.get('photo');const photoUrl=await uploadListingPhoto(photo,listingId);if(!photoUrl)return;item.photoUrl=photoUrl;listings.unshift(item);persist();closeModal();showPage('dashboard');render()}}
 function closeModal(){$('#modal').classList.add('hidden')};function showPage(name){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(`#${name}Page`).classList.remove('hidden');if(name==='home')render();if(name==='favorites')render();if(name==='dashboard')renderDash()};
 function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 $('#sellTop').onclick=openSell;$('#sellBottom').onclick=openSell;$('#heroSell').onclick=openSell;$('#dashSell').onclick=openSell;$('#close').onclick=closeModal;modal.onclick=e=>{if(e.target===modal)closeModal()};$('#search').oninput=render;$('#category').onchange=render;$('#location').onchange=render;$('#clearSearch').onclick=()=>{$('#search').value='';$('#category').value='';$('#location').value='';render()};document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));render();
@@ -189,5 +189,44 @@ async function saveListingToSupabase(item) {
 
   console.log('OLOJA listing saved to Supabase!');
   return data.id;
+}
+
+// Upload a listing photo to Supabase Storage
+async function uploadListingPhoto(file, listingId) {
+  if (!file || !listingId) return false;
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const filePath = `${listingId}/${Date.now()}-${safeName}`;
+
+  const { error: uploadError } = await window.olojaSupabase.storage
+    .from('listing-images')
+    .upload(filePath, file);
+
+  if (uploadError) {
+    console.error('Could not upload listing photo:', uploadError);
+    alert('Could not upload photo: ' + uploadError.message);
+    return false;
+  }
+
+  const { data: urlData } = window.olojaSupabase.storage
+    .from('listing-images')
+    .getPublicUrl(filePath);
+
+  const { error: photoError } = await window.olojaSupabase
+    .from('listing_photos')
+    .insert({
+      listing_id: listingId,
+      photo_url: urlData.publicUrl,
+      sort_order: 0
+    });
+
+  if (photoError) {
+    console.error('Could not save photo record:', photoError);
+    alert('Photo uploaded, but could not attach it to the listing: ' + photoError.message);
+    return false;
+  }
+
+  console.log('OLOJA listing photo uploaded!');
+  return urlData.publicUrl;
 }
 
