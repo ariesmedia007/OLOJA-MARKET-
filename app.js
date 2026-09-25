@@ -124,3 +124,23 @@ async function checkLoggedInUser() {
 }
 
 checkLoggedInUser();
+// Load listings belonging to the currently logged-in user
+async function loadMyListings() {
+  const { data: { session } } = await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) return;
+
+  const { data, error } = await window.olojaSupabase
+    .from('listings')
+    .select('*')
+    .eq('seller_id', session.user.id);
+
+  if (error) {
+    console.error('Could not load My Listings:', error);
+    return;
+  }
+
+  console.log('My OLOJA listings:', data);
+}
+
+loadMyListings();
