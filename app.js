@@ -168,7 +168,7 @@ async function saveListingToSupabase(item) {
     return false;
   }
 
-  const { error } = await window.olojaSupabase
+  const { data, error } = await window.olojaSupabase
     .from('listings')
     .insert({
       title: item.title,
@@ -177,7 +177,9 @@ async function saveListingToSupabase(item) {
       location: item.loc,
       description: item.desc,
       seller_id: session.user.id
-    });
+    })
+.select('id')
+.single();
 
   if (error) {
     console.error('Could not save listing:', error);
@@ -186,6 +188,6 @@ async function saveListingToSupabase(item) {
   }
 
   console.log('OLOJA listing saved to Supabase!');
-  return true;
+  return data.id;
 }
 
