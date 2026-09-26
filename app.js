@@ -17,7 +17,122 @@ function renderDash(){let mine=listings.filter(x=>x.owner);$('#statListings').te
 function toggleSave(id){saved.has(id)?saved.delete(id):saved.add(id);persist();render()}
 window.toggleSave=toggleSave;
 window.view=id=>{let x=listings.find(a=>String(a.id)===String(id));modal.classList.remove('hidden');content.innerHTML=`<div class="detail"><div class="detailPic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Contact seller</button><button class="ghost" onclick="toggleSave(${x.id});closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
-window.contactSeller=id=>{let x=listings.find(a=>String(a.id)===String(id));location.href=`mailto:ariesmedia007@gmail.com?subject=${encodeURIComponent('OLOJA enquiry: '+x.title)}&body=${encodeURIComponent('Hello, I am interested in your OLOJA listing: '+x.title+' ('+money(x.price)+').')}`};
+window.contactSeller = async id => {
+  const x = listings.find(a => String(a.id) === String(id));
+
+  if (!x || !x.sellerId) {
+    alert('Messaging is available for real OLOJA listings only.');
+    return;
+  }
+
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in to message the seller.');
+    return;
+  }
+
+  if (session.user.id === x.sellerId) {
+    alert('This is your own listing.');
+    return;
+  }
+
+  let { data: conversation, error } = await window.olojaSupabase
+    .from('conversations')
+    .select('*')
+    .eq('buyer_id', session.user.id)
+    .eq('seller_id', x.sellerId)
+    .eq('listing_id', x.id)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Could not open conversation:', error);
+    alert('Could not open OLOJA chat: ' + error.message);
+    return;
+  }
+
+  if (!conversation) {
+    const { data, error: createError } = await window.olojaSupabase
+      .from('conversations')
+      .insert({
+        buyer_id: session.user.id,
+        seller_id: x.sellerId,
+        listing_id: x.id
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      console.error('Could not create conversation:', createError);
+      alert('Could not start OLOJA chat: ' + createError.message);
+      return;
+    }
+
+    conversation = data;
+  }
+
+  const { data: messages, error: messageError } =
+    await window.olojaSupabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversation.id)
+      .order('created_at', { ascending: true });
+
+  if (messageError) {
+    alert('Could not load messages: ' + messageError.message);
+    return;
+  }
+
+  modal.classList.remove('hidden');
+
+  content.innerHTML = `
+    <h2>Message seller</h2>
+    <p><strong>${esc(x.title)}</strong></p>
+
+    <div id="chatMessages">
+      ${(messages || []).length
+        ? messages.map(m => `
+            <p>
+              <strong>${m.sender_id === session.user.id ? 'You' : 'Seller'}:</strong>
+              ${esc(m.message_text)}
+            </p>
+          `).join('')
+        : '<p class="muted">No messages yet. Start the conversation.</p>'
+      }
+    </div>
+
+    <textarea id="chatInput"
+      placeholder="Write your message..."
+      rows="4"></textarea>
+
+    <button id="sendChatBtn" class="primary">
+      Send message
+    </button>
+  `;
+
+  document.querySelector('#sendChatBtn').onclick = async () => {
+    const input = document.querySelector('#chatInput');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    const { error: sendError } = await window.olojaSupabase
+      .from('messages')
+      .insert({
+        conversation_id: conversation.id,
+        sender_id: session.user.id,
+        message_text: message
+      });
+
+    if (sendError) {
+      alert('Could not send message: ' + sendError.message);
+      return;
+    }
+
+    await window.contactSeller(id);
+  };
+};
 window.deleteListing=id=>{if(confirm('Delete this listing?')){listings=listings.filter(x=>x.id!==id);saved.delete(id);persist();render()}};
 function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><input name="loc" placeholder="Location e.g. Akute" required><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><input type="file" name="photo" accept="image/*" required><button class="primary">Publish Listing</button></form>`;$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photo=f.get('photo');const photoUrl=await uploadListingPhoto(photo,listingId);if(!photoUrl)return;item.photoUrl=photoUrl;listings.unshift(item);persist();closeModal();showPage('dashboard');render()}}
 function closeModal(){$('#modal').classList.add('hidden')};function showPage(name){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(`#${name}Page`).classList.remove('hidden');if(name==='home')render();if(name==='favorites')render();if(name==='dashboard')renderDash()};
@@ -244,6 +359,7 @@ async function loadCloudListings() {
 
   const cloudListings = (data || []).map(item => ({
     id: item.id,
+    sellerId: item.seller_id,
     title: item.title,
     price: item.price,
     cat: item.listing_type || 'Product',
