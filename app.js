@@ -230,3 +230,32 @@ async function uploadListingPhoto(file, listingId) {
   console.log('OLOJA listing photo uploaded!');
   return urlData.publicUrl;
 }
+// Add real Supabase listings to the Marketplace
+async function loadCloudListings() {
+  const { data, error } = await window.olojaSupabase
+    .from('listings')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Could not load cloud listings:', error);
+    return;
+  }
+
+  const cloudListings = (data || []).map(item => ({
+    id: item.id,
+    title: item.title,
+    price: item.price,
+    cat: item.listing_type || 'Product',
+    loc: item.location || '',
+    desc: item.description || '',
+    icon: '🛍️',
+    seller: 'Seller',
+    owner: false
+  }));
+
+  listings = [...cloudListings, ...seed];
+  render();
+}
+
+loadCloudListings();
