@@ -11,7 +11,7 @@ let saved=new Set();
 const $=s=>document.querySelector(s),money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
 const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
-function card(x){return `<article class="card"><button class="save" onclick="toggleSave(${x.id})">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.icon||'🛍️'}</div><div class="info"><div class="cat">${x.cat}</div><div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view(${x.id})">View listing</button></div></article>`}
+function card(x){return `<article class="card"><button class="save" onclick="toggleSave(${x.id})">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="info"><div class="cat">${x.cat}</div><div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view(${x.id})">View listing</button></div></article>`}
 function render(){let q=$('#search').value.toLowerCase(),c=$('#category').value,l=$('#location').value;let arr=listings.filter(x=>(!q||`${x.title} ${x.cat} ${x.loc} ${x.desc}`.toLowerCase().includes(q))&&(!c||x.cat===c)&&(!l||x.loc===l));grid.innerHTML=arr.length?arr.map(card).join(''):'<p class="muted">No listings found. Try another filter.</p>';favGrid.innerHTML=[...listings].filter(x=>saved.has(x.id)).map(card).join('')||'<p class="muted">No saved listings yet. Tap ♡ on any listing to save it.</p>';renderDash()}
 function renderDash(){let mine=listings.filter(x=>x.owner);$('#statListings').textContent=mine.length;$('#statSaved').textContent=saved.size;$('#statValue').textContent=money(mine.reduce((a,x)=>a+Number(x.price),0));myListings.innerHTML=mine.length?mine.map(x=>`<div class="myitem"><div><h3>${esc(x.title)}</h3><p>${money(x.price)} · ${esc(x.loc)} · ${esc(x.cat)}</p></div><button class="ghost" onclick="deleteListing(${x.id})">Delete</button></div>`).join(''):'<p class="muted">You have not posted a listing on this device yet.</p>'}
 function toggleSave(id){saved.has(id)?saved.delete(id):saved.add(id);persist();render()}
@@ -234,7 +234,7 @@ async function uploadListingPhoto(file, listingId) {
 async function loadCloudListings() {
   const { data, error } = await window.olojaSupabase
     .from('listings')
-    .select('*')
+    .select('*, listing_photos(photo_url, sort_order)')
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -249,6 +249,7 @@ async function loadCloudListings() {
     cat: item.listing_type || 'Product',
     loc: item.location || '',
     desc: item.description || '',
+    photoUrl: item.listing_photos && item.listing_photos.length ? item.listing_photos[0].photo_url : null,
     icon: '🛍️',
     seller: 'Seller',
     owner: false
