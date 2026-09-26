@@ -135,7 +135,83 @@ window.contactSeller = async id => {
 };
 window.deleteListing=id=>{if(confirm('Delete this listing?')){listings=listings.filter(x=>x.id!==id);saved.delete(id);persist();render()}};
 function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><input name="loc" placeholder="Location e.g. Akute" required><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><input type="file" name="photo" accept="image/*" required><button class="primary">Publish Listing</button></form>`;$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photo=f.get('photo');const photoUrl=await uploadListingPhoto(photo,listingId);if(!photoUrl)return;item.photoUrl=photoUrl;listings.unshift(item);persist();closeModal();showPage('dashboard');render()}}
-function closeModal(){$('#modal').classList.add('hidden')};function showPage(name){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(`#${name}Page`).classList.remove('hidden');if(name==='home')render();if(name==='favorites')render();if(name==='dashboard')renderDash()};
+function closeModal(){$('#modal').classList.add('hidden')};function showPage(name){document.querySelectorAll('.page').forEach(x=>x.classList.add('hidden'));$(`#${name}Page`).classList.remove('hidden');if(name==='home')render();if(name==='favorites')render();if(name==='dashboard')renderDash();if(name==='messages')loadConversations();};
+async function loadConversations() {
+  const list = document.querySelector('#conversationsList');
+  if (!list) return;
+
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    list.innerHTML = '<p class="muted">Please log in to see your messages.</p>';
+    return;
+  }
+
+  list.innerHTML = '<p class="muted">Loading messages...</p>';
+
+  const { data: conversations, error } = await window.olojaSupabase
+    .from('conversations')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Could not load conversations:', error);
+    list.innerHTML =
+      '<p class="muted">Could not load your messages.</p>';
+    return;
+  }
+
+  if (!conversations || conversations.length === 0) {
+    list.innerHTML =
+      '<p class="muted">No OLOJA conversations yet.</p>';
+    return;
+  }
+
+  const rows = await Promise.all(
+    conversations.map(async conversation => {
+
+      const { data: listing } = await window.olojaSupabase
+        .from('listings')
+        .select('title')
+        .eq('id', conversation.listing_id)
+        .maybeSingle();
+
+      const { data: latest } = await window.olojaSupabase
+        .from('messages')
+        .select('message_text, sender_id, created_at')
+        .eq('conversation_id', conversation.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let who = 'Message';
+
+      if (latest) {
+        if (latest.sender_id === session.user.id) {
+          who = 'You';
+        } else if (conversation.seller_id === session.user.id) {
+          who = 'Buyer';
+        } else {
+          who = 'Seller';
+        }
+      }
+
+      return `
+        <div class="myitem">
+          <div>
+            <strong>${esc(listing?.title || 'OLOJA Listing')}</strong>
+            <p>
+              ${who}: ${esc(latest?.message_text || 'No messages yet')}
+            </p>
+          </div>
+        </div>
+      `;
+    })
+  );
+
+  list.innerHTML = rows.join('');
+}
 function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 $('#sellTop').onclick=openSell;$('#sellBottom').onclick=openSell;$('#heroSell').onclick=openSell;$('#dashSell').onclick=openSell;$('#close').onclick=closeModal;modal.onclick=e=>{if(e.target===modal)closeModal()};$('#search').oninput=render;$('#category').onchange=render;$('#location').onchange=render;$('#clearSearch').onclick=()=>{$('#search').value='';$('#category').value='';$('#location').value='';render()};document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));render();
 
