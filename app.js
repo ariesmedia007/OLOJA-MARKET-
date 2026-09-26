@@ -198,7 +198,7 @@ async function loadConversations() {
       }
 
       return `
-        <div class="myitem">
+        <div class="myitem" onclick="window.openConversation('${conversation.id}')">
           <div>
             <strong>${esc(listing?.title || 'OLOJA Listing')}</strong>
             <p>
@@ -212,6 +212,93 @@ async function loadConversations() {
 
   list.innerHTML = rows.join('');
 }
+window.openConversation = async conversationId => {
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in to open this conversation.');
+    return;
+  }
+
+  const { data: conversation, error: conversationError } =
+    await window.olojaSupabase
+      .from('conversations')
+      .select('*')
+      .eq('id', conversationId)
+      .single();
+
+  if (conversationError || !conversation) {
+    alert('Could not open this conversation.');
+    return;
+  }
+
+  const { data: listing } = await window.olojaSupabase
+    .from('listings')
+    .select('title')
+    .eq('id', conversation.listing_id)
+    .maybeSingle();
+
+  const { data: messages, error: messageError } =
+    await window.olojaSupabase
+      .from('messages')
+      .select('*')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+  if (messageError) {
+    alert('Could not load messages: ' + messageError.message);
+    return;
+  }
+
+  modal.classList.remove('hidden');
+
+  content.innerHTML = `
+    <h2>${esc(listing?.title || 'OLOJA Chat')}</h2>
+
+    <div id="chatMessages">
+      ${(messages || []).length
+        ? messages.map(m => `
+            <p>
+              <strong>${m.sender_id === session.user.id ? 'You' : 'Them'}:</strong>
+              ${esc(m.message_text)}
+            </p>
+          `).join('')
+        : '<p class="muted">No messages yet.</p>'
+      }
+    </div>
+
+    <textarea id="chatInput"
+      placeholder="Write your reply..."
+      rows="4"></textarea>
+
+    <button id="sendChatBtn" class="primary">
+      Send message
+    </button>
+  `;
+
+  document.querySelector('#sendChatBtn').onclick = async () => {
+    const input = document.querySelector('#chatInput');
+    const message = input.value.trim();
+
+    if (!message) return;
+
+    const { error: sendError } = await window.olojaSupabase
+      .from('messages')
+      .insert({
+        conversation_id: conversationId,
+        sender_id: session.user.id,
+        message_text: message
+      });
+
+    if (sendError) {
+      alert('Could not send message: ' + sendError.message);
+      return;
+    }
+
+    await window.openConversation(conversationId);
+  };
+};
 function esc(s){return String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 $('#sellTop').onclick=openSell;$('#sellBottom').onclick=openSell;$('#heroSell').onclick=openSell;$('#dashSell').onclick=openSell;$('#close').onclick=closeModal;modal.onclick=e=>{if(e.target===modal)closeModal()};$('#search').oninput=render;$('#category').onchange=render;$('#location').onchange=render;$('#clearSearch').onclick=()=>{$('#search').value='';$('#category').value='';$('#location').value='';render()};document.querySelectorAll('.navbtn').forEach(b=>b.onclick=()=>showPage(b.dataset.page));render();
 
