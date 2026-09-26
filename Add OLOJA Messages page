@@ -9,7 +9,7 @@
 <body>
 <header class="topbar">
   <a class="brand" href="#" aria-label="OLOJA home">OLOJA</a>
-  <nav><button class="navbtn" data-page="home">Marketplace</button><button class="navbtn" data-page="favorites">Saved</button><button class="navbtn" data-page="dashboard">My OLOJA</button></nav>
+  <nav><button class="navbtn" data-page="home">Marketplace</button><button class="navbtn" data-page="favorites">Saved</button><button class="navbtn" data-page="messages">Messages</button><button class="navbtn" data-page="dashboard">My OLOJA</button></nav>
   <button id="sellTop" class="primary">＋ Sell</button>
 <div class="auth-actions">
   <button id="loginBtn" type="button">Log In</button>
@@ -25,7 +25,17 @@
   <section class="sellbox"><div><p class="eyebrow">SELL FASTER</p><h2>Have something to sell?</h2><p>Take a photo, add a price and publish your listing.</p></div><button id="sellBottom" class="primary">Post an item</button></section>
 </section>
 <section id="favoritesPage" class="page hidden"><div class="sectionhead"><div><p class="eyebrow">YOUR PICKS</p><h2>Saved listings</h2></div></div><section id="favoritesGrid" class="grid"></section></section>
-<section id="dashboardPage" class="page hidden"><div class="sectionhead"><div><p class="eyebrow">SELLER SPACE</p><h2>My OLOJA</h2><p class="muted">Manage listings stored on this device in the prototype.</p></div><button class="primary" id="dashSell">＋ New listing</button></div><div class="stats"><div><b id="statListings">0</b><span>Listings</span></div><div><b id="statSaved">0</b><span>Saved</span></div><div><b id="statValue">₦0</b><span>Listed value</span></div></div><section id="myListings" class="mylist"></section></section>
+<section id="messagesPage" class="page hidden">
+  <div class="sectionhead">
+    <div>
+      <p class="eyebrow">MESSAGES</p>
+      <h2>OLOJA Chats</h2>
+    </div>
+  </div>
+
+  <section id="conversationsList" class="grid"></section>
+</section>
+  <section id="dashboardPage" class="page hidden"><div class="sectionhead"><div><p class="eyebrow">SELLER SPACE</p><h2>My OLOJA</h2><p class="muted">Manage listings stored on this device in the prototype.</p></div><button class="primary" id="dashSell">＋ New listing</button></div><div class="stats"><div><b id="statListings">0</b><span>Listings</span></div><div><b id="statSaved">0</b><span>Saved</span></div><div><b id="statValue">₦0</b><span>Listed value</span></div></div><section id="myListings" class="mylist"></section></section>
   <section id="accountPage" class="page hidden">
   <div class="sectionhead">
     <div>
