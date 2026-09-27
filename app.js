@@ -283,11 +283,9 @@ window.openConversation = async conversationId => {
     return;
   }
 const { error: readError } = await window.olojaSupabase
-  .from('messages')
-  .update({ read_at: new Date().toISOString() })
-  .eq('conversation_id', conversationId)
-  .neq('sender_id', session.user.id)
-  .is('read_at', null);
+  .rpc('mark_conversation_read', {
+    p_conversation_id: conversationId
+  });
 
 if (readError) {
   console.error('Could not mark messages as read:', readError);
