@@ -212,6 +212,38 @@ async function loadConversations() {
 
   list.innerHTML = rows.join('');
 }
+async function updateUnreadBadge() {
+  const badge = document.querySelector('#messageBadge');
+  if (!badge) return;
+
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    badge.classList.add('hidden');
+    return;
+  }
+
+  const { count, error } = await window.olojaSupabase
+    .from('messages')
+    .select('id', { count: 'exact', head: true })
+    .neq('sender_id', session.user.id)
+    .is('read_at', null);
+
+  if (error) {
+    console.error('Could not count unread messages:', error);
+    return;
+  }
+
+  if (count > 0) {
+    badge.textContent = count;
+    badge.classList.remove('hidden');
+  } else {
+    badge.textContent = '0';
+    badge.classList.add('hidden');
+  }
+}
+updateUnreadBadge();
 window.openConversation = async conversationId => {
   const { data: { session } } =
     await window.olojaSupabase.auth.getSession();
@@ -250,7 +282,18 @@ window.openConversation = async conversationId => {
     alert('Could not load messages: ' + messageError.message);
     return;
   }
+const { error: readError } = await window.olojaSupabase
+  .from('messages')
+  .update({ read_at: new Date().toISOString() })
+  .eq('conversation_id', conversationId)
+  .neq('sender_id', session.user.id)
+  .is('read_at', null);
 
+if (readError) {
+  console.error('Could not mark messages as read:', readError);
+}
+
+await updateUnreadBadge();
   modal.classList.remove('hidden');
 
   content.innerHTML = `
