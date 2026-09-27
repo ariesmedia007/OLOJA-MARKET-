@@ -51,20 +51,149 @@ async function renderDash() {
   );
 
   myListings.innerHTML = myCloudListings.length
-    ? myCloudListings.map(item => `
-        <div class="myitem">
-          <div>
-            <h3>${esc(item.title)}</h3>
-            <p>
-              ${money(item.price)} ·
-              ${esc(item.location || '')} ·
-              ${esc(item.listing_type || 'Product')}
-            </p>
+  ? myCloudListings.map(item => `
+      <div class="myitem">
+        <div>
+          <h3>${esc(item.title)}</h3>
+          <p>
+            ${money(item.price)} ·
+            ${esc(item.location || '')} ·
+            ${esc(item.listing_type || 'Product')}
+          </p>
+
+          <div class="actions">
+            <button type="button" class="ghost"
+              onclick="view('${item.id}')">
+              View
+            </button>
+
+            <button type="button" class="ghost"
+              onclick="editCloudListing('${item.id}')">
+              Edit
+            </button>
+
+            <button type="button" class="ghost"
+              onclick="deleteCloudListing('${item.id}')">
+              Delete
+            </button>
           </div>
         </div>
-      `).join('')
-    : '<p class="muted">You have not posted a listing yet.</p>';
+      </div>
+    `).join('')
+  : '<p class="muted">You have not posted a listing yet.</p>';
 }
+window.deleteCloudListing = async function (id) {
+  const ok = confirm('Delete this listing permanently from OLOJA?');
+  if (!ok) return;
+
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in first.');
+    return;
+  }
+
+  const { data, error } = await window.olojaSupabase
+    .from('listings')
+    .delete()
+    .eq('id', id)
+    .eq('seller_id', session.user.id)
+    .select('id');
+
+  if (error) {
+    alert('Could not delete listing: ' + error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    alert('Listing was not deleted.');
+    return;
+  }
+
+  alert('Listing deleted successfully.');
+
+  await loadCloudListings();
+  await renderDash();
+};
+window.editCloudListing = async function (id) {
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in first.');
+    return;
+  }
+
+  const { data: listing, error: loadError } =
+    await window.olojaSupabase
+      .from('listings')
+      .select('id, title, price, listing_type, location, description')
+      .eq('id', id)
+      .eq('seller_id', session.user.id)
+      .maybeSingle();
+
+  if (loadError || !listing) {
+    alert('Could not load this listing for editing.');
+    return;
+  }
+
+  const title = prompt('Listing title:', listing.title || '');
+  if (title === null) return;
+
+  const priceText = prompt('Price:', listing.price ?? '');
+  if (priceText === null) return;
+
+  const location = prompt('Location:', listing.location || '');
+  if (location === null) return;
+
+  const listingType = prompt(
+    'Category / type:',
+    listing.listing_type || 'Product'
+  );
+  if (listingType === null) return;
+
+  const description = prompt(
+    'Description:',
+    listing.description || ''
+  );
+  if (description === null) return;
+
+  const price = Number(String(priceText).replace(/,/g, ''));
+
+  if (!title.trim() || !Number.isFinite(price) || price < 0) {
+    alert('Please enter a valid title and price.');
+    return;
+  }
+
+  const { data, error } = await window.olojaSupabase
+    .from('listings')
+    .update({
+      title: title.trim(),
+      price: price,
+      location: location.trim(),
+      listing_type: listingType.trim() || 'Product',
+      description: description.trim()
+    })
+    .eq('id', id)
+    .eq('seller_id', session.user.id)
+    .select('id');
+
+  if (error) {
+    alert('Could not update listing: ' + error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    alert('Listing was not updated.');
+    return;
+  }
+
+  alert('Listing updated successfully.');
+
+  await loadCloudListings();
+  await renderDash();
+};
 async function toggleSave(id) {
   const { data: { session } } =
     await window.olojaSupabase.auth.getSession();
