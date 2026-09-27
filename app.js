@@ -13,7 +13,58 @@ const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),mo
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
 function card(x){return `<article class="card"><button class="save" onclick="toggleSave(${x.id})">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="info"><div class="cat">${x.cat}</div><div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view('${x.id}')">View listing</button></div></article>`}
 function render(){let q=$('#search').value.toLowerCase(),c=$('#category').value,l=$('#location').value;let arr=listings.filter(x=>(!q||`${x.title} ${x.cat} ${x.loc} ${x.desc}`.toLowerCase().includes(q))&&(!c||x.cat===c)&&(!l||x.loc===l));grid.innerHTML=arr.length?arr.map(card).join(''):'<p class="muted">No listings found. Try another filter.</p>';favGrid.innerHTML=[...listings].filter(x=>saved.has(x.id)).map(card).join('')||'<p class="muted">No saved listings yet. Tap ♡ on any listing to save it.</p>';renderDash()}
-function renderDash(){let mine=listings.filter(x=>x.owner);$('#statListings').textContent=mine.length;$('#statSaved').textContent=saved.size;$('#statValue').textContent=money(mine.reduce((a,x)=>a+Number(x.price),0));myListings.innerHTML=mine.length?mine.map(x=>`<div class="myitem"><div><h3>${esc(x.title)}</h3><p>${money(x.price)} · ${esc(x.loc)} · ${esc(x.cat)}</p></div><button class="ghost" onclick="deleteListing(${x.id})">Delete</button></div>`).join(''):'<p class="muted">You have not posted a listing on this device yet.</p>'}
+async function renderDash() {
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    $('#statListings').textContent = '0';
+    $('#statValue').textContent = money(0);
+    myListings.innerHTML =
+      '<p class="muted">Please log in to view your listings.</p>';
+    return;
+  }
+
+  const { data: mine, error } = await window.olojaSupabase
+    .from('listings')
+    .select('id, title, price, listing_type, location')
+    .eq('seller_id', session.user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Could not load your listings:', error);
+    myListings.innerHTML =
+      '<p class="muted">Could not load your listings.</p>';
+    return;
+  }
+
+  const myCloudListings = mine || [];
+
+  $('#statListings').textContent = myCloudListings.length;
+  $('#statSaved').textContent = saved.size;
+
+  $('#statValue').textContent = money(
+    myCloudListings.reduce(
+      (total, item) => total + Number(item.price || 0),
+      0
+    )
+  );
+
+  myListings.innerHTML = myCloudListings.length
+    ? myCloudListings.map(item => `
+        <div class="myitem">
+          <div>
+            <h3>${esc(item.title)}</h3>
+            <p>
+              ${money(item.price)} ·
+              ${esc(item.location || '')} ·
+              ${esc(item.listing_type || 'Product')}
+            </p>
+          </div>
+        </div>
+      `).join('')
+    : '<p class="muted">You have not posted a listing yet.</p>';
+}
 function toggleSave(id){saved.has(id)?saved.delete(id):saved.add(id);persist();render()}
 window.toggleSave=toggleSave;
 window.view=id=>{let x=listings.find(a=>String(a.id)===String(id));modal.classList.remove('hidden');content.innerHTML=`<div class="detail"><div class="detailPic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Contact seller</button><button class="ghost" onclick="toggleSave(${x.id});closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
