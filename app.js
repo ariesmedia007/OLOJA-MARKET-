@@ -260,7 +260,7 @@ window.openConversation = async conversationId => {
       ${(messages || []).length
         ? messages.map(m => `
             <p>
-              <strong>${m.sender_id === session.user.id ? 'You' : 'Them'}:</strong>
+              <strong>${m.sender_id === session.user.id ? 'You' : (conversation.seller_id === session.user.id ? 'Buyer' : 'Seller')}:</strong>
               ${esc(m.message_text)}
             </p>
           `).join('')
