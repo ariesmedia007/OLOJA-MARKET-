@@ -678,7 +678,30 @@ async function loadCloudListings() {
     console.error('Could not load cloud listings:', error);
     return;
   }
+const sellerIds = [...new Set(
+  (data || []).map(item => item.seller_id).filter(Boolean)
+)];
 
+let sellerNames = {};
+
+if (sellerIds.length) {
+  const { data: sellerProfiles, error: sellerProfileError } =
+    await window.olojaSupabase
+      .from('profiles')
+      .select('id, full_name')
+      .in('id', sellerIds);
+
+  if (sellerProfileError) {
+    console.error('Could not load seller names:', sellerProfileError);
+  } else {
+    sellerNames = Object.fromEntries(
+      (sellerProfiles || []).map(profile => [
+        profile.id,
+        profile.full_name || 'OLOJA User'
+      ])
+    );
+  }
+}
   const cloudListings = (data || []).map(item => ({
     id: item.id,
     sellerId: item.seller_id,
@@ -689,7 +712,7 @@ async function loadCloudListings() {
     desc: item.description || '',
     photoUrl: item.listing_photos && item.listing_photos.length ? item.listing_photos[0].photo_url : null,
     icon: '🛍️',
-    seller: 'Seller',
+    seller: sellerNames[item.seller_id] || 'OLOJA User',
     owner: false
   }));
 
