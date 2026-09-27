@@ -489,6 +489,8 @@ document.querySelector('#signupBtn').onclick = async function () {
   }
 
   // If not logged in, create a new account
+  const fullName = prompt('Enter your full name:');
+if (!fullName || !fullName.trim()) return;
   const email = prompt('Enter your email address:');
   if (!email) return;
 
@@ -496,8 +498,13 @@ document.querySelector('#signupBtn').onclick = async function () {
   if (!password) return;
 
   const { data, error } = await window.olojaSupabase.auth.signUp({
-    email: email,
-    password: password
+  email: email,
+password: password,
+options: {
+  data: {
+    full_name: fullName.trim()
+  }
+}
   });
 
   if (error) {
