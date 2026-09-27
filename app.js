@@ -65,8 +65,87 @@ async function renderDash() {
       `).join('')
     : '<p class="muted">You have not posted a listing yet.</p>';
 }
-function toggleSave(id){saved.has(id)?saved.delete(id):saved.add(id);persist();render()}
+async function toggleSave(id) {
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in to save listings.');
+    return;
+  }
+
+  const listing = listings.find(
+    item => String(item.id) === String(id)
+  );
+
+  if (!listing || !listing.sellerId) {
+    alert('Only real OLOJA listings can be saved.');
+    return;
+  }
+
+  const listingId = String(id);
+
+  if (saved.has(listingId)) {
+    const { error } = await window.olojaSupabase
+      .from('favorites')
+      .delete()
+      .eq('user_id', session.user.id)
+      .eq('listing_id', listingId);
+
+    if (error) {
+      alert('Could not remove saved listing: ' + error.message);
+      return;
+    }
+
+    saved.delete(listingId);
+  } else {
+    const { error } = await window.olojaSupabase
+      .from('favorites')
+      .insert({
+        user_id: session.user.id,
+        listing_id: listingId
+      });
+
+    if (error) {
+      alert('Could not save listing: ' + error.message);
+      return;
+    }
+
+    saved.add(listingId);
+  }
+
+  render();
+  await renderDash();
+}
 window.toggleSave=toggleSave;
+async function loadSavedFavorites() {
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  saved = new Set();
+
+  if (!session || !session.user) {
+    render();
+    return;
+  }
+
+  const { data, error } = await window.olojaSupabase
+    .from('favorites')
+    .select('listing_id')
+    .eq('user_id', session.user.id);
+
+  if (error) {
+    console.error('Could not load saved listings:', error);
+    return;
+  }
+
+  saved = new Set(
+    (data || []).map(row => String(row.listing_id))
+  );
+
+  render();
+  await renderDash();
+}
 window.view=id=>{let x=listings.find(a=>String(a.id)===String(id));modal.classList.remove('hidden');content.innerHTML=`<div class="detail"><div class="detailPic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Contact seller</button><button class="ghost" onclick="toggleSave(${x.id});closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
 window.contactSeller = async id => {
   const x = listings.find(a => String(a.id) === String(id));
@@ -772,6 +851,8 @@ if (sellerIds.length) {
 }
 
 loadCloudListings();
+loadSavedFavorites();
+
 const myAccountButton = document.querySelector('#loginBtn');
 
 if (myAccountButton) {
