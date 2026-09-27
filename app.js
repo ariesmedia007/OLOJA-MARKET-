@@ -668,3 +668,15 @@ async function loadCloudListings() {
 }
 
 loadCloudListings();
+const myAccountButton = document.querySelector('#loginBtn');
+
+if (myAccountButton) {
+  myAccountButton.addEventListener('click', async () => {
+    const { data: { session } } =
+      await window.olojaSupabase.auth.getSession();
+
+    if (session && session.user) {
+      await loadProfile();
+    }
+  });
+}
