@@ -264,6 +264,18 @@ async function loadConversations() {
         .select('title')
         .eq('id', conversation.listing_id)
         .maybeSingle();
+      const otherUserId =
+  conversation.buyer_id === session.user.id
+    ? conversation.seller_id
+    : conversation.buyer_id;
+
+const { data: otherProfile } = await window.olojaSupabase
+  .from('profiles')
+  .select('full_name')
+  .eq('id', otherUserId)
+  .maybeSingle();
+
+const otherName = otherProfile?.full_name || 'OLOJA User';
 
       const { data: latest } = await window.olojaSupabase
         .from('messages')
@@ -279,9 +291,9 @@ async function loadConversations() {
         if (latest.sender_id === session.user.id) {
           who = 'You';
         } else if (conversation.seller_id === session.user.id) {
-          who = 'Buyer';
+          who = otherName;
         } else {
-          who = 'Seller';
+          who = otherName;
         }
       }
 
@@ -381,7 +393,18 @@ if (readError) {
 
 await updateUnreadBadge();
   modal.classList.remove('hidden');
+const chatOtherUserId =
+  conversation.buyer_id === session.user.id
+    ? conversation.seller_id
+    : conversation.buyer_id;
 
+const { data: chatOtherProfile } = await window.olojaSupabase
+  .from('profiles')
+  .select('full_name')
+  .eq('id', chatOtherUserId)
+  .maybeSingle();
+
+const chatOtherName = chatOtherProfile?.full_name || 'OLOJA User';
   content.innerHTML = `
     <h2>${esc(listing?.title || 'OLOJA Chat')}</h2>
 
@@ -389,7 +412,7 @@ await updateUnreadBadge();
       ${(messages || []).length
         ? messages.map(m => `
             <p>
-              <strong>${m.sender_id === session.user.id ? 'You' : (conversation.seller_id === session.user.id ? 'Buyer' : 'Seller')}:</strong>
+              <strong>${m.sender_id === session.user.id ? 'You' : chatOtherName}:</strong>
               ${esc(m.message_text)}
             </p>
           `).join('')
