@@ -942,7 +942,7 @@ async function saveListingToSupabase(item) {
     .insert({
       title: item.title,
       price: item.price,
-      listing_type: 'product',
+      listing_type: item.cat,
       location: item.loc,
       description: item.desc,
       seller_id: session.user.id
