@@ -1,4 +1,44 @@
 const categories=['Phones & Electronics','Fashion','Vehicles','Home & Furniture','Real Estate','Jobs & Services','Pets & Animals','Health & Beauty','Babies & Kids','Sports & Fitness','Food & Agriculture','Books & Education','Business & Equipment','Other'];
+const nigeriaStates=['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara','FCT'];
+const nigeriaAreas={
+  'Abia':['Aba','Umuahia','Ohafia','Other area'],
+  'Adamawa':['Yola','Mubi','Numan','Other area'],
+  'Akwa Ibom':['Uyo','Eket','Ikot Ekpene','Oron','Other area'],
+  'Anambra':['Awka','Onitsha','Nnewi','Ekwulobia','Other area'],
+  'Bauchi':['Bauchi','Azare','Misau','Other area'],
+  'Bayelsa':['Yenagoa','Ogbia','Brass','Other area'],
+  'Benue':['Makurdi','Gboko','Otukpo','Other area'],
+  'Borno':['Maiduguri','Biu','Bama','Other area'],
+  'Cross River':['Calabar','Ikom','Ogoja','Other area'],
+  'Delta':['Asaba','Warri','Sapele','Ughelli','Other area'],
+  'Ebonyi':['Abakaliki','Afikpo','Other area'],
+  'Edo':['Benin City','Auchi','Ekpoma','Other area'],
+  'Ekiti':['Ado-Ekiti','Ikere-Ekiti','Other area'],
+  'Enugu':['Enugu','Nsukka','Oji River','Other area'],
+  'Gombe':['Gombe','Kaltungo','Other area'],
+  'Imo':['Owerri','Orlu','Okigwe','Other area'],
+  'Jigawa':['Dutse','Hadejia','Other area'],
+  'Kaduna':['Kaduna','Zaria','Kafanchan','Other area'],
+  'Kano':['Kano','Wudil','Other area'],
+  'Katsina':['Katsina','Daura','Funtua','Other area'],
+  'Kebbi':['Birnin Kebbi','Argungu','Other area'],
+  'Kogi':['Lokoja','Okene','Anyigba','Other area'],
+  'Kwara':['Ilorin','Offa','Other area'],
+  'Lagos':['Ikeja','Lekki','Ajah','Yaba','Surulere','Ikorodu','Ojodu Berger','Agege','Ogba','Other area'],
+  'Nasarawa':['Lafia','Keffi','Karu','Other area'],
+  'Niger':['Minna','Suleja','Bida','Other area'],
+  'Ogun':['Abeokuta','Akute','Ajuwon','Ota','Ibafo','Mowe','Ijebu-Ode','Sagamu','Other area'],
+  'Ondo':['Akure','Ondo','Owo','Other area'],
+  'Osun':['Osogbo','Ile-Ife','Ilesa','Other area'],
+  'Oyo':['Ibadan','Ogbomoso','Oyo','Other area'],
+  'Plateau':['Jos','Bukuru','Other area'],
+  'Rivers':['Port Harcourt','Obio-Akpor','Bonny','Other area'],
+  'Sokoto':['Sokoto','Tambuwal','Other area'],
+  'Taraba':['Jalingo','Wukari','Other area'],
+  'Yobe':['Damaturu','Potiskum','Gashua','Other area'],
+  'Zamfara':['Gusau','Kaura Namoda','Other area'],
+  'FCT':['Abuja','Gwagwalada','Kubwa','Kuje','Bwari','Lugbe','Other area']
+};
 const seed=[
 {id:1,title:'iPhone 13 Pro',price:520000,cat:'Phones & Electronics',loc:'Lagos',icon:'📱',desc:'Clean used iPhone 13 Pro. Face ID and cameras working.',seller:'OLOJA Demo Seller'},
 {id:2,title:'2-Seater Sofa',price:180000,cat:'Home & Furniture',loc:'Akute',icon:'🛋️',desc:'Neat modern sofa, ready for pickup.',seller:'OLOJA Demo Seller'},
@@ -421,55 +461,29 @@ window.contactSeller = async id => {
   };
 };
 window.deleteListing=id=>{if(confirm('Delete this listing?')){listings=listings.filter(x=>x.id!==id);saved.delete(id);persist();render()}};
-function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><select name="loc" required>
-  <option value="">Choose location</option>
+function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><select name="state" id="sellState" required>
+  <option value="">Choose state</option>
+  ${nigeriaStates.map(state => `<option>${state}</option>`).join('')}
+</select>
 
-  <optgroup label="Lagos">
-    <option>Lagos</option>
-    <option>Ikeja</option>
-    <option>Lekki</option>
-    <option>Ajah</option>
-    <option>Yaba</option>
-    <option>Surulere</option>
-    <option>Ikorodu</option>
-    <option>Ojodu Berger</option>
-    <option>Agege</option>
-    <option>Ogba</option>
-  </optgroup>
-
-  <optgroup label="Ogun">
-    <option>Akute</option>
-    <option>Ajuwon</option>
-    <option>Ota</option>
-    <option>Abeokuta</option>
-    <option>Ibafo</option>
-    <option>Mowe</option>
-  </optgroup>
-
-  <optgroup label="FCT">
-    <option>Abuja</option>
-  </optgroup>
-
-  <optgroup label="Oyo">
-    <option>Ibadan</option>
-  </optgroup>
-
-  <optgroup label="Rivers">
-    <option>Port Harcourt</option>
-  </optgroup>
-
-  <optgroup label="Other">
-    <option>Benin City</option>
-    <option>Enugu</option>
-    <option>Onitsha</option>
-    <option>Asaba</option>
-    <option>Kano</option>
-    <option>Kaduna</option>
-  </optgroup>
+<select name="loc" id="sellArea" required disabled>
+  <option value="">Choose area / city</option>
 </select><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><div id="photoInputs">
   <input type="file" name="photo" accept="image/*" required>
 </div>
-<button type="button" id="addPhotoBtn">+ Add another photo</button><button class="primary">Publish Listing</button></form>`;$('#addPhotoBtn').onclick = () => {
+<button type="button" id="addPhotoBtn">+ Add another photo</button><button class="primary">Publish Listing</button></form>`;
+                   const sellState = $('#sellState');
+const sellArea = $('#sellArea');
+
+sellState.onchange = () => {
+  const areas = nigeriaAreas[sellState.value] || [];
+
+  sellArea.innerHTML =
+    '<option value="">Choose area / city</option>' +
+    areas.map(area => `<option>${area}</option>`).join('');
+
+  sellArea.disabled = areas.length === 0;
+};$('#addPhotoBtn').onclick = () => {
   const box = $('#photoInputs');
   const count = box.querySelectorAll('input[type="file"]').length;
 
@@ -484,7 +498,7 @@ function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post
   input.accept = 'image/*';
 
   box.appendChild(input);
-};$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photos = f.getAll('photo').filter(file => file && file.size > 0);
+};$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),state:f.get('state'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photos = f.getAll('photo').filter(file => file && file.size > 0);
 
 if (!photos.length) return;
 
@@ -988,6 +1002,7 @@ async function saveListingToSupabase(item) {
       title: item.title,
       price: item.price,
       listing_type: item.cat,
+      state: item.state,
       location: item.loc,
       description: item.desc,
       seller_id: session.user.id
