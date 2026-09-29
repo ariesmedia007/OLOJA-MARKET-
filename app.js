@@ -1,4 +1,4 @@
-const categories=['Phones & Electronics','Fashion','Vehicles','Home & Furniture','Real Estate','Jobs & Services','Other'];
+const categories=['Phones & Electronics','Fashion','Vehicles','Home & Furniture','Real Estate','Jobs & Services','Pets & Animals','Health & Beauty','Babies & Kids','Sports & Fitness','Food & Agriculture','Books & Education','Business & Equipment','Other'];
 const seed=[
 {id:1,title:'iPhone 13 Pro',price:520000,cat:'Phones & Electronics',loc:'Lagos',icon:'📱',desc:'Clean used iPhone 13 Pro. Face ID and cameras working.',seller:'OLOJA Demo Seller'},
 {id:2,title:'2-Seater Sofa',price:180000,cat:'Home & Furniture',loc:'Akute',icon:'🛋️',desc:'Neat modern sofa, ready for pickup.',seller:'OLOJA Demo Seller'},
