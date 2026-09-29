@@ -421,7 +421,52 @@ window.contactSeller = async id => {
   };
 };
 window.deleteListing=id=>{if(confirm('Delete this listing?')){listings=listings.filter(x=>x.id!==id);saved.delete(id);persist();render()}};
-function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><input name="loc" placeholder="Location e.g. Akute" required><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><div id="photoInputs">
+function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><select name="loc" required>
+  <option value="">Choose location</option>
+
+  <optgroup label="Lagos">
+    <option>Lagos</option>
+    <option>Ikeja</option>
+    <option>Lekki</option>
+    <option>Ajah</option>
+    <option>Yaba</option>
+    <option>Surulere</option>
+    <option>Ikorodu</option>
+    <option>Ojodu Berger</option>
+    <option>Agege</option>
+    <option>Ogba</option>
+  </optgroup>
+
+  <optgroup label="Ogun">
+    <option>Akute</option>
+    <option>Ajuwon</option>
+    <option>Ota</option>
+    <option>Abeokuta</option>
+    <option>Ibafo</option>
+    <option>Mowe</option>
+  </optgroup>
+
+  <optgroup label="FCT">
+    <option>Abuja</option>
+  </optgroup>
+
+  <optgroup label="Oyo">
+    <option>Ibadan</option>
+  </optgroup>
+
+  <optgroup label="Rivers">
+    <option>Port Harcourt</option>
+  </optgroup>
+
+  <optgroup label="Other">
+    <option>Benin City</option>
+    <option>Enugu</option>
+    <option>Onitsha</option>
+    <option>Asaba</option>
+    <option>Kano</option>
+    <option>Kaduna</option>
+  </optgroup>
+</select><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><div id="photoInputs">
   <input type="file" name="photo" accept="image/*" required>
 </div>
 <button type="button" id="addPhotoBtn">+ Add another photo</button><button class="primary">Publish Listing</button></form>`;$('#addPhotoBtn').onclick = () => {
