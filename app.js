@@ -275,7 +275,35 @@ async function loadSavedFavorites() {
   render();
   await renderDash();
 }
-window.view=id=>{let x=listings.find(a=>String(a.id)===String(id));modal.classList.remove('hidden');content.innerHTML=`<div class="detail"><div class="detailPic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Contact seller</button><button class="ghost" onclick="toggleSave(${x.id});closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
+window.view=async id=>{let x=listings.find(a=>String(a.id)===String(id));
+                       let photoUrls = x?.photoUrl ? [x.photoUrl] : [];
+
+if (x?.sellerId) {
+  const { data: photoRows, error: photoLoadError } =
+    await window.olojaSupabase
+      .from('listing_photos')
+      .select('photo_url, sort_order')
+      .eq('listing_id', id)
+      .order('sort_order', { ascending: true });
+
+  if (!photoLoadError && photoRows?.length) {
+    photoUrls = photoRows
+      .map(row => row.photo_url)
+      .filter(Boolean);
+  }
+}
+  const galleryHtml = photoUrls.length
+  ? `<div class="detailPic" style="display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:8px;">
+      ${photoUrls.map(url => `
+        <img
+          src="${esc(url)}"
+          style="min-width:100%;height:100%;object-fit:cover;scroll-snap-align:start;"
+        >
+      `).join('')}
+    </div>`
+  : `<div class="detailPic">${x.icon || '🛍️'}</div>`;
+                       
+modal.classList.remove('hidden');content.innerHTML=`<div class="detail">${galleryHtml}<div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Contact seller</button><button class="ghost" onclick="toggleSave('${x.id}');closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
 window.contactSeller = async id => {
   const x = listings.find(a => String(a.id) === String(id));
 
