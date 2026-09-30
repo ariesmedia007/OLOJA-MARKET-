@@ -535,6 +535,8 @@ function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post
 </select><input name="icon" placeholder="Emoji for prototype e.g. 📱"><textarea name="desc" placeholder="Describe the item honestly: condition, size, important details…" required></textarea><div id="photoInputs">
   <input type="file" name="photo" accept="image/*" required>
 </div>
+<label>Optional video (max 50MB)</label>
+<input type="file" name="video" accept="video/*">
 <button type="button" id="addPhotoBtn">+ Add another photo</button><button class="primary">Publish Listing</button></form>`;
                    const sellState = $('#sellState');
 const sellArea = $('#sellArea');
@@ -563,6 +565,7 @@ sellState.onchange = () => {
 
   box.appendChild(input);
 };$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),state:f.get('state'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photos = f.getAll('photo').filter(file => file && file.size > 0);
+                                    const video = f.get('video');
 
 if (!photos.length) return;
 
@@ -577,7 +580,13 @@ for (let i = 0; i < photos.length; i++) {
     firstPhotoUrl = photoUrl;
   }
 }
+if (video && video.size > 0) {
+  const videoUrl = await uploadListingVideo(video, listingId);
 
+  if (videoUrl) {
+    item.videoUrl = videoUrl;
+  }
+}
 item.photoUrl = firstPhotoUrl;;listings.unshift(item);persist();closeModal();showPage('dashboard');render()}}
 function closeModal(){$('#modal').classList.add('hidden')};function showPage(name)
 {
@@ -1122,6 +1131,60 @@ async function uploadListingPhoto(file, listingId, sortOrder = 0) {
   console.log('OLOJA listing photo uploaded!');
   return urlData.publicUrl;
 }
+async function uploadListingVideo(file, listingId) {
+  if (!file || !listingId) return false;
+
+  if (!file.type.startsWith('video/')) {
+    alert('Please choose a valid video file.');
+    return false;
+  }
+
+  if (file.size > 50 * 1024 * 1024) {
+    alert('Video must be 50MB or smaller.');
+    return false;
+  }
+
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in first.');
+    return false;
+  }
+
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+  const filePath =
+    `${session.user.id}/${listingId}/${Date.now()}-${safeName}`;
+
+  const { error: uploadError } =
+    await window.olojaSupabase.storage
+      .from('listing-videos')
+      .upload(filePath, file);
+
+  if (uploadError) {
+    alert('Could not upload video: ' + uploadError.message);
+    return false;
+  }
+
+  const { data: urlData } =
+    window.olojaSupabase.storage
+      .from('listing-videos')
+      .getPublicUrl(filePath);
+
+  const { error: updateError } =
+    await window.olojaSupabase
+      .from('listings')
+      .update({ video_url: urlData.publicUrl })
+      .eq('id', listingId)
+      .eq('seller_id', session.user.id);
+
+  if (updateError) {
+    alert('Video uploaded but could not attach to listing: ' + updateError.message);
+    return false;
+  }
+
+  return urlData.publicUrl;
+}
 // Add real Supabase listings to the Marketplace
 async function loadCloudListings() {
   const { data, error } = await window.olojaSupabase
@@ -1166,6 +1229,7 @@ if (sellerIds.length) {
     loc: item.location || '',
     desc: item.description || '',
     photoUrl: item.listing_photos && item.listing_photos.length ? item.listing_photos[0].photo_url : null,
+    videoUrl: item.video_url || null,
     icon: '🛍️',
     seller: sellerNames[item.seller_id] || 'OLOJA User',
     owner: false
