@@ -342,8 +342,13 @@ if (x?.sellerId) {
       `).join('')}
     </div>`
   : `<div class="detailPic">${x.icon || '🛍️'}</div>`;
-                       
-modal.classList.remove('hidden');content.innerHTML=`<div class="detail">${galleryHtml}<div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Message seller</button>
+    const videoHtml = x.videoUrl
+  ? `<video controls playsinline
+      style="width:100%;max-height:420px;border-radius:15px;margin-top:12px;background:#000;">
+      <source src="${esc(x.videoUrl)}">
+    </video>`
+  : '';                   
+modal.classList.remove('hidden');content.innerHTML=`<div class="detail">${galleryHtml}${videoHtml}<div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Message seller</button>
 <button class="ghost" onclick="viewSellerContact('${x.id}')">View seller contact</button><button class="ghost" onclick="toggleSave('${x.id}');closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
 window.viewSellerContact = async id => {
   const { data: { session } } =
