@@ -1,4 +1,20 @@
 const categories=['Phones & Electronics','Fashion','Vehicles','Home & Furniture','Real Estate','Jobs & Services','Pets & Animals','Health & Beauty','Babies & Kids','Sports & Fitness','Food & Agriculture','Books & Education','Business & Equipment','Other'];
+const categoryIcons = {
+  'Phones & Electronics': '📱',
+  'Fashion': '👕',
+  'Vehicles': '🚗',
+  'Home & Furniture': '🛋️',
+  'Real Estate': '🏠',
+  'Jobs & Services': '🛠️',
+  'Pets & Animals': '🐾',
+  'Health & Beauty': '💄',
+  'Babies & Kids': '🧸',
+  'Sports & Fitness': '⚽',
+  'Food & Agriculture': '🌾',
+  'Books & Education': '📚',
+  'Business & Equipment': '💼',
+  'Other': '📦'
+};
 const nigeriaStates=['Abia','Adamawa','Akwa Ibom','Anambra','Bauchi','Bayelsa','Benue','Borno','Cross River','Delta','Ebonyi','Edo','Ekiti','Enugu','Gombe','Imo','Jigawa','Kaduna','Kano','Katsina','Kebbi','Kogi','Kwara','Lagos','Nasarawa','Niger','Ogun','Ondo','Osun','Oyo','Plateau','Rivers','Sokoto','Taraba','Yobe','Zamfara','FCT'];
 const nigeriaAreas={
   'Abia':['Aba','Umuahia','Ohafia','Other area'],
