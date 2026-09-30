@@ -343,7 +343,71 @@ if (x?.sellerId) {
     </div>`
   : `<div class="detailPic">${x.icon || '🛍️'}</div>`;
                        
-modal.classList.remove('hidden');content.innerHTML=`<div class="detail">${galleryHtml}<div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Contact seller</button><button class="ghost" onclick="toggleSave('${x.id}');closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
+modal.classList.remove('hidden');content.innerHTML=`<div class="detail">${galleryHtml}<div class="cat">${esc(x.cat)}</div><h2>${esc(x.title)}</h2><h3>${money(x.price)}</h3><p>📍 ${esc(x.loc)}</p><p>${esc(x.desc)}</p><p class="muted">Seller: ${esc(x.seller||'OLOJA seller')}</p><div class="actions"><button class="primary" onclick="contactSeller('${x.id}')">Message seller</button>
+<button class="ghost" onclick="viewSellerContact('${x.id}')">View seller contact</button><button class="ghost" onclick="toggleSave('${x.id}');closeModal()">${saved.has(x.id)?'Unsave':'Save'}</button></div></div>`};
+window.viewSellerContact = async id => {
+  const { data: { session } } =
+    await window.olojaSupabase.auth.getSession();
+
+  if (!session || !session.user) {
+    alert('Please log in to view seller contact.');
+    return;
+  }
+
+  const { data, error } = await window.olojaSupabase
+    .rpc('get_listing_seller_contact', {
+      p_listing_id: id
+    });
+
+  if (error) {
+    alert('Could not load seller contact: ' + error.message);
+    return;
+  }
+
+  const contact = Array.isArray(data) ? data[0] : data;
+
+  if (!contact || (!contact.phone && !contact.whatsapp)) {
+    alert('This seller has not added contact details yet.');
+    return;
+  }
+
+  const phone = contact.phone || '';
+  const whatsapp = contact.whatsapp || '';
+
+  const phoneHref = phone.replace(/[^\d+]/g, '');
+
+  let waNumber = whatsapp.replace(/\D/g, '');
+  if (waNumber.startsWith('0')) {
+    waNumber = '234' + waNumber.slice(1);
+  }
+
+  content.innerHTML = `
+    <div class="detail">
+      <h2>Seller contact</h2>
+
+      ${phone ? `
+        <p>📞 ${esc(phone)}</p>
+        <a class="primary" href="tel:${phoneHref}">
+          Call seller
+        </a>
+      ` : ''}
+
+      ${whatsapp ? `
+        <p>💬 ${esc(whatsapp)}</p>
+        <a class="ghost"
+           href="https://wa.me/${waNumber}"
+           target="_blank"
+           rel="noopener">
+          Chat on WhatsApp
+        </a>
+      ` : ''}
+
+      <button class="ghost" onclick="closeModal()">
+        Close
+      </button>
+    </div>
+  `;
+};
 window.contactSeller = async id => {
   const x = listings.find(a => String(a.id) === String(id));
 
