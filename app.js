@@ -1049,7 +1049,24 @@ document.querySelector('#loginBtn').onclick = async function () {
   // If not logged in, ask for login details
   const email = prompt('Enter your email address:');
   if (!email) return;
+const forgotPassword = confirm(
+  'Forgot your password?\n\nClick OK to receive a password reset link.\nClick Cancel to continue logging in.'
+);
 
+if (forgotPassword) {
+  const { error: resetError } =
+    await window.olojaSupabase.auth.resetPasswordForEmail(email, {
+      redirectTo: 'https://oloja-marketplace.pages.dev/?reset-password=1'
+    });
+
+  if (resetError) {
+    alert('Could not send reset email: ' + resetError.message);
+  } else {
+    alert('Password reset link sent. Please check your email.');
+  }
+
+  return;
+}
   const password = prompt('Enter your password:');
   if (!password) return;
 
@@ -1067,6 +1084,48 @@ document.querySelector('#loginBtn').onclick = async function () {
     console.log('OLOJA login:', data);
   }
 };
+window.olojaSupabase.auth.onAuthStateChange((event, session) => {
+  if (event !== 'PASSWORD_RECOVERY') return;
+
+  setTimeout(async () => {
+    const newPassword = prompt(
+      'Enter your new OLOJA password (minimum 6 characters):'
+    );
+
+    if (!newPassword) return;
+
+    if (newPassword.length < 6) {
+      alert('Password must be at least 6 characters.');
+      return;
+    }
+
+    const confirmPassword = prompt(
+      'Enter the new password again to confirm:'
+    );
+
+    if (newPassword !== confirmPassword) {
+      alert('The passwords do not match. Please try again.');
+      return;
+    }
+
+    const { error } = await window.olojaSupabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      alert('Could not update password: ' + error.message);
+      return;
+    }
+
+    alert('Password changed successfully. You can now use your new password.');
+
+    window.history.replaceState(
+      {},
+      document.title,
+      window.location.pathname
+    );
+  }, 0);
+});
 // Keep track of the currently logged-in OLOJA user
 async function checkLoggedInUser() {
   const { data: { session } } = await window.olojaSupabase.auth.getSession();
