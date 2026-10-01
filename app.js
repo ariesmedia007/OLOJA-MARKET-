@@ -68,6 +68,40 @@ const $=s=>document.querySelector(s),money=n=>'₦'+Number(n||0).toLocaleString(
 const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
 function card(x){return `<article class="card"><button class="save" onclick="toggleSave('${x.id}')">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="info"><div class="cat">${categoryIcons[x.cat] || '🏷️'} ${esc(x.cat)}</div><div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view('${x.id}')">View listing</button></div></article>`}
+function renderCategoryGrid() {
+  const categoryGrid = $('#categoryGrid');
+
+  if (!categoryGrid) return;
+
+  categoryGrid.innerHTML = categories.map(cat => `
+    <button type="button"
+      class="categoryTile"
+      onclick="selectCategory('${cat}')">
+
+      <span class="categoryTileIcon">
+        ${categoryIcons[cat] || '🏷️'}
+      </span>
+
+      <span>${esc(cat)}</span>
+    </button>
+  `).join('');
+}
+
+window.selectCategory = function(cat) {
+  const categorySelect = $('#category');
+
+  if (categorySelect) {
+    categorySelect.value = cat;
+  }
+
+  render();
+
+  document.querySelector('#grid')?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
+};
+renderCategoryGrid();
 function render(){let q=$('#search').value.toLowerCase(),c=$('#category').value,l=$('#location').value;let arr=listings.filter(x=>(!q||`${x.title} ${x.cat} ${x.loc} ${x.desc}`.toLowerCase().includes(q))&&(!c||x.cat===c)&&(!l||x.loc===l));grid.innerHTML=arr.length?arr.map(card).join(''):'<p class="muted">No listings found. Try another filter.</p>';favGrid.innerHTML=[...listings].filter(x=>saved.has(x.id)).map(card).join('')||'<p class="muted">No saved listings yet. Tap ♡ on any listing to save it.</p>';renderDash()}
 async function renderDash() {
   const { data: { session } } =
