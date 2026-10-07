@@ -612,7 +612,15 @@ window.contactSeller = async id => {
   };
 };
 window.deleteListing=id=>{if(confirm('Delete this listing?')){listings=listings.filter(x=>x.id!==id);saved.delete(id);persist();render()}};
-function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><select name="state" id="sellState" required>
+function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post on OLOJA</h2><p class="notice">This MVP stores your listing on this device. The production version will store listings in a secure cloud database.</p><form class="form" id="sellForm"><input name="title" placeholder="What are you selling?" required><input name="price" type="number" min="0" placeholder="Price in naira" required><select name="cat"id="sellCategory" required><option value="">Choose category</option>${categories.map(x=>`<option>${x}</option>`).join('')}</select><div id="flatmateFields" class="hidden">
+  <label>What do you want to do?</label>
+
+  <select name="flatmate_intent" id="flatmateIntent">
+    <option value="">Choose an option</option>
+    <option value="have_room">I have a room / apartment</option>
+    <option value="need_room">I need a room / shared apartment</option>
+  </select>
+</div><select name="state" id="sellState" required>
   <option value="">Choose state</option>
   ${nigeriaStates.map(state => `<option>${state}</option>`).join('')}
 </select>
@@ -627,7 +635,21 @@ function openSell(){modal.classList.remove('hidden');content.innerHTML=`<h2>Post
 <button type="button" id="addPhotoBtn">+ Add another photo</button><button class="primary">Publish Listing</button></form>`;
                    const sellState = $('#sellState');
 const sellArea = $('#sellArea');
+const sellCategory = $('#sellCategory');
+const flatmateFields = $('#flatmateFields');
+const flatmateIntent = $('#flatmateIntent');
 
+sellCategory.onchange = () => {
+  const isFlatmate =
+    sellCategory.value === 'Flatmate & Rent Apartment';
+
+  flatmateFields.classList.toggle('hidden', !isFlatmate);
+  flatmateIntent.required = isFlatmate;
+
+  if (!isFlatmate) {
+    flatmateIntent.value = '';
+  }
+};
 sellState.onchange = () => {
   const areas = nigeriaAreas[sellState.value] || [];
 
@@ -651,7 +673,7 @@ sellState.onchange = () => {
   input.accept = 'image/*';
 
   box.appendChild(input);
-};$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),state:f.get('state'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photos = f.getAll('photo').filter(file => file && file.size > 0);
+};$('#sellForm').onsubmit=async e=>{e.preventDefault();let f=new FormData(e.target);let item={id:Date.now(),title:f.get('title'),price:Number(f.get('price')),cat:f.get('cat'),flatmateIntent:f.get('flatmate_intent'),state:f.get('state'),loc:f.get('loc'),desc:f.get('desc'),icon:f.get('icon')||'🛍️',seller:'You',owner:true};const listingId=await saveListingToSupabase(item);if(!listingId)return;const photos = f.getAll('photo').filter(file => file && file.size > 0);
                                     const video = f.get('video');
 
 if (!photos.length) return;
