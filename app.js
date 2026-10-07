@@ -102,7 +102,7 @@ window.selectCategory = function(cat) {
   });
 };
 renderCategoryGrid();
-function render(){let q=$('#search').value.toLowerCase(),c=$('#category').value,l=$('#location').value;let arr=listings.filter(x=>(!q||`${x.title} ${x.cat} ${x.loc} ${x.desc}`.toLowerCase().includes(q))&&(!c||x.cat===c)&&(!l||x.loc===l));grid.innerHTML=arr.length?arr.map(card).join(''):'<p class="muted">No listings found. Try another filter.</p>';favGrid.innerHTML=[...listings].filter(x=>saved.has(x.id)).map(card).join('')||'<p class="muted">No saved listings yet. Tap ♡ on any listing to save it.</p>';renderDash()}
+function render(){let q=$('#search').value.toLowerCase(),c=$('#category').value,l=$('#location').value;let arr=listings.filter(x=>(!q||`${x.title} ${x.cat} ${x.loc} ${x.desc}`.toLowerCase().includes(q))&&(!c||x.cat===c)&&(!l||(l.startsWith('state:')?(x.loc===l.slice(6)||(nigeriaAreas[l.slice(6)]||[]).includes(x.loc)):x.loc===l)));grid.innerHTML=arr.length?arr.map(card).join(''):'<p class="muted">No listings found. Try another filter.</p>';favGrid.innerHTML=[...listings].filter(x=>saved.has(x.id)).map(card).join('')||'<p class="muted">No saved listings yet. Tap ♡ on any listing to save it.</p>';renderDash()}
 async function renderDash() {
   const { data: { session } } =
     await window.olojaSupabase.auth.getSession();
