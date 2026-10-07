@@ -1054,24 +1054,7 @@ document.querySelector('#loginBtn').onclick = async function () {
   // If not logged in, ask for login details
   const email = prompt('Enter your email address:');
   if (!email) return;
-const forgotPassword = confirm(
-  'Forgot your password?\n\nClick OK to receive a password reset link.\nClick Cancel to continue logging in.'
-);
 
-if (forgotPassword) {
-  const { error: resetError } =
-    await window.olojaSupabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'https://oloja-marketplace.pages.dev/?reset-password=1'
-    });
-
-  if (resetError) {
-    alert('Could not send reset email: ' + resetError.message);
-  } else {
-    alert('Password reset link sent. Please check your email.');
-  }
-
-  return;
-}
   const password = prompt('Enter your password:');
   if (!password) return;
 
@@ -1080,9 +1063,26 @@ if (forgotPassword) {
     password: password
   });
 
-  if (error) {
-    alert('Log in failed: ' + error.message);
-  } else {
+ if (error) {
+  alert('Log in failed: ' + error.message);
+
+  const forgotPassword = confirm(
+    'Forgot your password?\n\nClick OK to receive a password reset link.'
+  );
+
+  if (forgotPassword) {
+    const { error: resetError } =
+      await window.olojaSupabase.auth.resetPasswordForEmail(email, {
+        redirectTo: 'https://oloja-marketplace.pages.dev/?reset-password=1'
+      });
+
+    if (resetError) {
+      alert('Could not send reset email: ' + resetError.message);
+    } else {
+      alert('Password reset link sent. Please check your email.');
+    }
+  }
+} else {
     alert('Welcome to OLOJA! You are now logged in.');
     document.querySelector('#loginBtn').textContent = 'My Account';
     document.querySelector('#signupBtn').textContent = 'Log Out';
