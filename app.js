@@ -66,6 +66,37 @@ let listings=seed.slice();
 let saved=new Set();
 const $=s=>document.querySelector(s),money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
 const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
+function populateBuyerLocations() {
+  const locationSelect = $('#location');
+
+  if (!locationSelect) return;
+
+  locationSelect.innerHTML =
+    '<option value="">All locations</option>';
+
+  nigeriaStates.forEach(state => {
+    const group = document.createElement('optgroup');
+    group.label = state;
+
+    const allStateOption = document.createElement('option');
+    allStateOption.value = `state:${state}`;
+    allStateOption.textContent =
+      state === 'FCT' ? 'All FCT' : `All ${state} State`;
+
+    group.appendChild(allStateOption);
+
+    (nigeriaAreas[state] || []).forEach(area => {
+      const option = document.createElement('option');
+      option.value = area;
+      option.textContent = area;
+      group.appendChild(option);
+    });
+
+    locationSelect.appendChild(group);
+  });
+}
+
+populateBuyerLocations();
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
 function card(x){return `<article class="card"><button class="save" onclick="toggleSave('${x.id}')">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="info"><div class="cat">${categoryIcons[x.cat] || '🏷️'} ${esc(x.cat)}</div><div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view('${x.id}')">View listing</button></div></article>`}
 function renderCategoryGrid() {
