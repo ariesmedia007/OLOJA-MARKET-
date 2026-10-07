@@ -1027,10 +1027,15 @@ options: {
 
   if (error) {
     alert('Sign up failed: ' + error.message);
+} else {
+  if (data.session) {
+    alert('Account created successfully! You are now logged in.');
   } else {
-    alert('Account created! Please check your email to confirm your account.');
-    console.log('OLOJA signup:', data);
+    alert('Account created successfully. You can now log in.');
   }
+
+  console.log('OLOJA signup:', data);
+}
 };
 document.querySelector('#loginBtn').onclick = async function () {
   const { data: { session } } = await window.olojaSupabase.auth.getSession();
