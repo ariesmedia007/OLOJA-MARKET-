@@ -1417,6 +1417,8 @@ if (sellerIds.length) {
     desc: item.description || '',
     photoUrl: item.listing_photos && item.listing_photos.length ? item.listing_photos[0].photo_url : null,
     videoUrl: item.video_url || null,
+    isFeatured: item.is_featured || false,
+featuredUntil: item.featured_until || null,
     icon: '🛍️',
     seller: sellerNames[item.seller_id] || 'OLOJA User',
     owner: false
