@@ -66,7 +66,7 @@ const seed=[
 let listings=seed.slice();
 let saved=new Set();
 const $=s=>document.querySelector(s),money=n=>'₦'+Number(n||0).toLocaleString('en-NG');
-const grid=$('#grid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
+const grid=$('#grid'),featuredGrid=$('#featuredGrid'),favGrid=$('#favoritesGrid'),myListings=$('#myListings'),modal=$('#modal'),content=$('#modalContent');
 function populateBuyerLocations() {
   const locationSelect = $('#location');
 
