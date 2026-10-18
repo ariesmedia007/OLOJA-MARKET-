@@ -1262,6 +1262,7 @@ async function saveListingToSupabase(item) {
       title: item.title,
       price: item.price,
       listing_type: item.cat,
+      flatmate_intent: item.flatmateIntent || null,
       state: item.state,
       location: item.loc,
       description: item.desc,
