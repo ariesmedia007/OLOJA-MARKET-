@@ -99,7 +99,7 @@ function populateBuyerLocations() {
 
 populateBuyerLocations();
 function persist(){localStorage.setItem('olojaListings',JSON.stringify(listings));localStorage.setItem('olojaSaved',JSON.stringify([...saved]));}
-function card(x){return `<article class="card">${x.isFeatured ? '<span class="featuredBadge">⭐ FEATURED</span>' : ''}<button class="save" onclick="toggleSave('${x.id}')">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="info"><div class="cat">${categoryIcons[x.cat] || '🏷️'} ${esc(x.cat)}</div><div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view('${x.id}')">View listing</button></div></article>`}
+function card(x){return `<article class="card">${x.isFeatured ? '<span class="featuredBadge">⭐ FEATURED</span>' : ''}<button class="save" onclick="toggleSave('${x.id}')">${saved.has(x.id)?'♥':'♡'}</button><div class="pic">${x.photoUrl?`<img src="${x.photoUrl}" style="width:100%;height:100%;object-fit:cover;">`:(x.icon||'🛍️')}</div><div class="info"><div class="cat">${categoryIcons[x.cat] || '🏷️'} ${esc(x.cat)}</div>${x.flatmateIntent ? `<div class="flatmateTag">${x.flatmateIntent === 'have_room' ? '🏠 HAS ROOM' : '🔎 NEEDS ROOM'}</div>` : ''}<div class="title">${esc(x.title)}</div><div class="price">${money(x.price)}</div><div class="loc">📍 ${esc(x.loc)}</div><button onclick="view('${x.id}')">View listing</button></div></article>`}
 function renderCategoryGrid() {
   const categoryGrid = $('#categoryGrid');
 
