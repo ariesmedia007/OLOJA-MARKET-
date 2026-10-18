@@ -151,3 +151,17 @@
   border-radius:999px;
   box-shadow:0 4px 12px rgba(0,0,0,.18);
 }
+/* Flatmate listing status */
+.flatmateTag{
+  display:inline-flex;
+  align-items:center;
+  width:max-content;
+  margin:8px 0 4px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#e8f5f2;
+  color:#0f766e;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.3px;
+}
