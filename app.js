@@ -1420,6 +1420,7 @@ if (sellerIds.length) {
     videoUrl: item.video_url || null,
     isFeatured: item.is_featured || false,
 featuredUntil: item.featured_until || null,
+    flatmateIntent: item.flatmate_intent || null,
     icon: '🛍️',
     seller: sellerNames[item.seller_id] || 'OLOJA User',
     owner: false
