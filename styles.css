@@ -132,3 +132,22 @@
     grid-template-columns:repeat(2,minmax(0,1fr)) !important;
   }
 }
+/* Featured badge */
+.card{
+  position:relative;
+}
+
+.featuredBadge{
+  position:absolute;
+  top:12px;
+  left:12px;
+  z-index:5;
+  background:#0f766e;
+  color:#fff;
+  font-size:11px;
+  font-weight:800;
+  letter-spacing:.4px;
+  padding:7px 10px;
+  border-radius:999px;
+  box-shadow:0 4px 12px rgba(0,0,0,.18);
+}
